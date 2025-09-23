@@ -1,150 +1,87 @@
 # GPS Positioning Service Open API Documentation
-
-## Overview
-This document provides comprehensive technical specifications for third-party developers to integrate **GPS positioning services** into their applications (App, Web, and WeChat platforms). It details open API interfaces, request/response formats, core parameters, error handling, and critical business logic, enabling developers to implement device management, location tracking, alarm monitoring, and other GPS-related functionalities.
-
-
-## Key Contents
-1. **Preface & Fundamentals**  
-   - Core concepts (e.g., `mds` token, unit ID, device ID, 13-bit UTC timestamp).  
-   - API calling flow (login → obtain token → call functional interfaces).  
-   - Default URLs (test: `apitest.18gps.net`; production: `api.18gps.net`) and supported map types (GOOGLECN, BAIDU, GAODE, QQ).  
-
-2. **Mobile Terminal Interfaces**  
-   - Core account operations: Login, password modification, device binding/unbinding.  
-   - GPS-related functions: Get real-time alarms, historical tracks, latest device location (single/batch), device list.  
-   - Device management: Modify device info, issue commands, query command results.  
-
-3. **Supplementary Modules**  
-   - Audio Recording: Get real-time/historical voice records, delete recordings.  
-   - Circular Fence (CFEN): Create, modify, delete circular fences, and get fence lists.  
-   - Authorization: Add/cancel device function authorization, query authorization lists.  
-   - Web Terminal Interfaces: User management (add/delete/modify), batch device operations (add/transfer/delete), device album/video retrieval.  
-   - OBD Box: Get fault codes, real-time vehicle condition data, and trip records.  
-
-4. **Reference Tables**  
-   - Alarm codes & descriptions (e.g., SOS: 0x01, overspeed: 0x06).  
-   - Error code mapping (user-level, device-level, system-level errors).  
-
-
-## Usage Notes
-- **Token (`mds`)**: Required for 98% of interfaces, valid for 20 minutes (extended on each request; re-login if expired, indicated by `errorCode=403`).  
-- **Request Methods**: GET/POST are interchangeable unless specified.  
-- **Parameter Sensitivity**: Pay attention to case sensitivity of request parameters.  
-- **Permissions**: Some interfaces (e.g., batch device operations) require specific user permissions; contact the business team for access if needed.  
-
-
-## Intended Audience
-Third-party developers integrating GPS positioning services into App, Web, or WeChat applications.
-
-
 ## Foreword
 
-### 1. Preface【Please be sure to read the entire preface carefully before you begin】
+### Preface【Please be sure to read the entire preface carefully before you begin】
 Please be sure to read the entire preface carefully before you begin!
 Please be sure to read the entire preface carefully before you begin!!
 Please be sure to read the entire preface carefully before you begin!!!
 
+## Overview
+This document is intended to provide third-party developers with the convenience of implementing GPS positioning services in Apps, Web, and WeChat Mini Programs. Please prepare your own domain name and organize the request links strictly according to the request parameters in this document, paying special attention to the case sensitivity of the parameters.
 
-#### Description
+### 2. Call Flow
 
-This document provides convenience for third-party developers to implement GPS positioning services in App, Web and WeChat fields. Please prepare your own domain name (the url to be called), and be sure to organize the request link according to the request parameters in the document, especially pay attention to the case of the request parameters.
+1.  **Obtain Credentials**: Use your account and password to obtain `mds` (token) and `id` through the login interface.
+2.  **Call Interfaces**: Use the obtained `mds` and `id` to call other functional interfaces.
+3.  **Get Device Location**: To get the latest location and historical track, you must first call the "Get Device List" interface to obtain the mapping between `macid` (device number) and the device ID.
 
-#### Flow
+### 3. Key Parameter Description
 
-Preparation: Open this document and display the directory first.
+| Parameter | Description |
+| --- | --- |
+| `mds` | Token, valid for 20 minutes. Continuous requests will automatically extend the expiration time. If the interface returns 403, the token has expired and you need to log in again to obtain a new one. |
+| `Unit ID` | The primary key of the user database, a 32-bit GUID. |
+| `Device ID` | The primary key of the device database, a 32-bit GUID. |
+| `Device Number` | An 8-15 digit string, one of the credentials for identifying terminal devices. |
+| `UTC Timestamp` | 13-digit UTC timestamp in milliseconds. |
 
-*   **wps software:** Click View - Click Navigation Pane.
-*   **Office:** Press Ctrl+F, the following picture will appear, click the circled button.
+### 4. Miscellaneous
 
-**First:** Use your account and password to obtain mds through the login interface, whether you are logging in with an account (unit user) or a device number.
-
-**Second:** Get the two values returned by the login interface, mds and id (this id is consistent with the login type, the unit id is returned for account login, and the device id is returned for device number login). These two values are very important.
-
-**Third:** Officially enter the stage of calling function interfaces. With the above two values, you can get the unit list or device list and a series of other operations.
-
-**Fourth:** But if you want to use the interface to get the latest location and historical track, you must first call the "Get Device List" interface, because it contains the corresponding relationship between macid (device number) and device id.
-
-**Fifth:** The following figure shows the sequence, which is also the interpretation of the above 4 sentences:
-
-
-
-mds: token, about 98% of interface calls must carry this parameter, obtained through the login interface. When the interface returns 403, it means the token has expired. The token is valid for 20 minutes. If data is continuously requested, the expiration time will be extended from the last request. If it really expires, please log in again!
-
-Unit ID: The primary key of the user database (unique index in the database), a 32-bit Guid. (Unit users) can obtain this value when calling the [Login] interface. A series of interfaces related to the logged-in user involve this ID.
-
-Device ID: The primary key of the device database (unique index in the database), a 32-bit Guid. (Obtained from the device list interface or [Login] interface (device number type)). A series of operations related to devices are involved.
-
-Device number: an 8-15 digit string, one of the credentials for identifying terminal devices, widely used. This value can be obtained from the device list interface. Its position on the Web platform is shown in the figure below:
+- **Request Method**: You can choose GET or POST as needed.
+- **Test URL**: `apitest.18gps.net`
+- **Official URL**: `api.18gps.net`
+- **Map Types**: `GOOGLECN` (Google Maps), `BAIDU` (Baidu Maps), `GAODE` (Gaode Maps), `QQ` (Tencent Maps).
 
 
 
+## Error Codes and Alarm Codes
 
-UTC Timestamp: The entire platform uniformly uses 13-digit UTC timestamp milliseconds, which is seconds * 1000. The figure below shows the timestamp obtained by javascript on the web page.
-
-Request Method: The request method given at the beginning of the table is not fixed, and you can choose GET or POST as needed.
-
-Default Test URL: apitest.18gps.net (It is recommended to use the official URL below)
-
-Default Official URL: api.18gps.net
-
-The entire platform involves MapType values, which have the following four types:
-
-*   GOOGLECN
-*   BAIDU
-*   GAODE
-*   QQ
-
-They represent Google Maps, Baidu Maps, Gaode Maps, and Tencent Maps respectively.
-
-## Alarm Number and Description
-
-## Error Code Correspondence Table
+### 1. Alarm Code Description
 
 | No. | Code | Meaning | No. | Code | Meaning | No. | Code | Meaning |
 |---|---|---|---|---|---|---|---|---|
-| 0 | 0x00 | Reserved | 21 | 0x15 | Overdue | 41 | 0x29 | Illegal alarm |
-| 1 | 0x01 | SOS | 22 | 0x16 | Gateway (X) | 42 | 0x2A | Vehicle not in use |
-| 2 | 0x02 | Anti-theft | 23 | 0x17 | Towing (X) | 43 | 0x2B | Vehicle not in use |
-| 3 | 0x03 | Out of bounds | 24 | 0x18 | Over speed | 44 | 0x2C | Vehicle not in use |
-| 4 | 0x04 | In/Out of bounds | 25 | 0x19 | 4s alarm | 45 | 0x2D | Headlight alarm |
-| 5 | 0x05 | Power cut | 26 | 0x1A | OBD fault | 46 | 0x2E | Vehicle not in use |
-| 6 | 0x06 | Over speed | 27 | 0x1B | Fuel alarm | 47 | 0x2F | Tire pressure alarm |
-| 7 | 0x07 | Low speed | 28 | 0x1C | Safe driving reminder | 48 | 0x30 | Overload alarm |
-| 8 | 0x08 | Low battery | 29 | 0x1D | High voltage | 49 | 0x31 | Overdue alarm |
-| 9 | 0x09 | Vibration | 30 | 0x1E | OBD fault | 50 | 0x32 | Low voltage alarm |
-| 10 | 0x0A | Movement | 31 | 0x1F | Anti-theft alarm | 51 | 0x33 | Low temperature alarm |
-| 11 | 0x0B | Offline | 32 | 0x20 | Bluetooth alarm | 52 | 0x34 | Abnormal alarm |
-| 12 | 0x0C | Entry/Exit area | 33 | 0x21 | GPS signal alarm | 53 | 0x35 | Low tire pressure |
-| 13 | 0x0D | Out of area | 34 | 0x22 | GSM signal alarm | 54 | 0x36 | High tire pressure |
-| 14 | 0x0E | Door open | 35 | 0x23 | Light sensor alarm | 55 | 0x37 | Upload alarm |
-| 15 | 0x0F | Key off | 36 | 0x24 | Normal alarm | 56 | 0x38 | Two-point stop |
-| 16 | 0x10 | Vehicle started | 37 | 0x25 | Offline alarm | 57 | 0x39 | Three-point stop |
-| 17 | 0x11 | Collision | 38 | 0x26 | Disassembly alarm | 58 | 0x3A | Device separation |
-| 18 | 0x12 | Towing | 39 | 0x27 | Parking alarm | 59 | 0x3B | Location alarm |
-| 19 | 0x13 | GBO (X) | 40 | 0x28 | Interference alarm | 60 | 0x3C | Annual review expired |
-| 61 | 0x3D | Insurance due | 81 | 0x51 | Vehicle setup | 101 | 0x65 | Battery overvoltage |
-| 62 | 0x3E | Maintenance due | 82 | 0x52 | Vehicle fire | 102 | 0x66 | Charging fault |
-| 63 | 0x3F | Mileage maintenance reminder | 83 | 0x53 | Overcurrent discharge | 103 | 0x67 | LED fault |
-| 64 | 0x40 | Out of bounds | 84 | 0x54 | Overcurrent charge | 104 | 0x68 | GNSS module fault |
-| 65 | 0x41 | Route deviation alarm | 85 | 0x55 | MOS over-temperature | 105 | 0x69 | GNSS antenna not connected |
-| 66 | 0x42 | Route limit alarm | 86 | 0x56 | Low capacity | 106 | 0x6A | Fuel abnormal |
-| 67 | 0x43 | Offline alarm | 87 | 0x57 | BMS fault alarm | 107 | 0x6B | Low oil alarm |
-| 68 | 0x44 | Base station | 88 | 0x58 | Running abnormal | 108 | 0x6C | 3D collision alarm |
-| 69 | 0x45 | Overtime alarm | 89 | 0x59 | Running normal | 109 | 0x6D | Emergency alarm |
-| 70 | 0x46 | Vehicle towing alarm | 90 | 0x5A | Device insertion | 110 | 0x6E | Annual review expired |
-| 71 | 0x47 | Vehicle vibration alarm | 91 | 0x5B | Device removal | 111 | 0x6F | Operational expired |
-| 72 | 0x48 | Rapid acceleration alarm | 92 | 0x5C | Voice control alarm | 112 | 0x70 | Enclosure stop |
-| 73 | 0x49 | Rapid deceleration alarm | 93 | 0x5D | Vehicle ignition | 113 | 0x71 | Enclosure outside stop |
-| 74 | 0x4A | Route limit alarm | 94 | 0x5E | Battery over-temperature | 114 | 0x72 | Door open alarm |
-| 75 | 0x4B | Sharp turn alarm | 95 | 0x5F | Collision alarm | 115 | 0x73 | Door close alarm |
-| 76 | 0x4C | Rapid speed alarm | 96 | 0x60 | Anti-theft alarm | |
-| 77 | 0x4D | Door open alarm | 97 | 0x61 | Screen off oil alarm | |
-| 78 | 0x4E | Door close alarm | 98 | 0x62 | Charge MOS fault | |
-| 79 | 0x4F | Emergency brake alarm | 99 | 0x63 | Discharge MOS fault | |
-| 80 | 0x50 | Emergency brake alarm | 100 | 0x64 | Low battery | |
+| 0 | 0x00 | Reserved | 21 | 0x15 | Overdue | 41 | 0x29 | Illegal Alarm |
+| 1 | 0x01 | SOS | 22 | 0x16 | Gateway (X) | 42 | 0x2A | Vehicle Not In Use |
+| 2 | 0x02 | Anti-theft | 23 | 0x17 | Towing (X) | 43 | 0x2B | Vehicle Not In Use |
+| 3 | 0x03 | Out of Bounds | 24 | 0x18 | Over Speed | 44 | 0x2C | Vehicle Not In Use |
+| 4 | 0x04 | In/Out of Bounds | 25 | 0x19 | 4s Alarm | 45 | 0x2D | Headlight Alarm |
+| 5 | 0x05 | Power Cut | 26 | 0x1A | OBD Fault | 46 | 0x2E | Vehicle Not In Use |
+| 6 | 0x06 | Over Speed | 27 | 0x1B | Fuel Alarm | 47 | 0x2F | Tire Pressure Alarm |
+| 7 | 0x07 | Low Speed | 28 | 0x1C | Safe Driving Reminder | 48 | 0x30 | Overload Alarm |
+| 8 | 0x08 | Low Battery | 29 | 0x1D | High Voltage | 49 | 0x31 | Overdue Alarm |
+| 9 | 0x09 | Vibration | 30 | 0x1E | OBD Fault | 50 | 0x32 | Low Voltage Alarm |
+| 10 | 0x0A | Movement | 31 | 0x1F | Anti-theft Alarm | 51 | 0x33 | Low Temperature Alarm |
+| 11 | 0x0B | Offline | 32 | 0x20 | Bluetooth Alarm | 52 | 0x34 | Abnormal Alarm |
+| 12 | 0x0C | Entry/Exit Area | 33 | 0x21 | GPS Signal Alarm | 53 | 0x35 | Low Tire Pressure |
+| 13 | 0x0D | Out of Area | 34 | 0x22 | GSM Signal Alarm | 54 | 0x36 | High Tire Pressure |
+| 14 | 0x0E | Door Open | 35 | 0x23 | Light Sensor Alarm | 55 | 0x37 | Upload Alarm |
+| 15 | 0x0F | Key Off | 36 | 0x24 | Normal Alarm | 56 | 0x38 | Two-point Stop |
+| 16 | 0x10 | Vehicle Started | 37 | 0x25 | Offline Alarm | 57 | 0x39 | Three-point Stop |
+| 17 | 0x11 | Collision | 38 | 0x26 | Disassembly Alarm | 58 | 0x3A | Device Separation |
+| 18 | 0x12 | Towing | 39 | 0x27 | Parking Alarm | 59 | 0x3B | Location Alarm |
+| 19 | 0x13 | GBO (X) | 40 | 0x28 | Interference Alarm | 60 | 0x3C | Annual Review Expired |
+| 61 | 0x3D | Insurance Due | 81 | 0x51 | Vehicle Setup | 101 | 0x65 | Battery Overvoltage |
+| 62 | 0x3E | Maintenance Due | 82 | 0x52 | Vehicle Fire | 102 | 0x66 | Charging Fault |
+| 63 | 0x3F | Mileage Maintenance Reminder | 83 | 0x53 | Overcurrent Discharge | 103 | 0x67 | LED Fault |
+| 64 | 0x40 | Out of Bounds | 84 | 0x54 | Overcurrent Charge | 104 | 0x68 | GNSS Module Fault |
+| 65 | 0x41 | Route Deviation Alarm | 85 | 0x55 | MOS Over-temperature | 105 | 0x69 | GNSS Antenna Not Connected |
+| 66 | 0x42 | Route Limit Alarm | 86 | 0x56 | Low Capacity | 106 | 0x6A | Fuel Abnormal |
+| 67 | 0x43 | Offline Alarm | 87 | 0x57 | BMS Fault Alarm | 107 | 0x6B | Low Oil Alarm |
+| 68 | 0x44 | Base Station | 88 | 0x58 | Running Abnormal | 108 | 0x6C | 3D Collision Alarm |
+| 69 | 0x45 | Overtime Alarm | 89 | 0x59 | Running Normal | 109 | 0x6D | Emergency Alarm |
+| 70 | 0x46 | Vehicle Towing Alarm | 90 | 0x5A | Device Insertion | 110 | 0x6E | Annual Review Expired |
+| 71 | 0x47 | Vehicle Vibration Alarm | 91 | 0x5B | Device Removal | 111 | 0x6F | Operational Expired |
+| 72 | 0x48 | Rapid Acceleration Alarm | 92 | 0x5C | Voice Control Alarm | 112 | 0x70 | Enclosure Stop |
+| 73 | 0x49 | Rapid Deceleration Alarm | 93 | 0x5D | Vehicle Ignition | 113 | 0x71 | Enclosure Outside Stop |
+| 74 | 0x4A | Route Limit Alarm | 94 | 0x5E | Battery Over-temperature | 114 | 0x72 | Door Open Alarm |
+| 75 | 0x4B | Sharp Turn Alarm | 95 | 0x5F | Collision Alarm | 115 | 0x73 | Door Close Alarm |
+| 76 | 0x4C | Rapid Speed Alarm | 96 | 0x60 | Anti-theft Alarm | |
+| 77 | 0x4D | Door Open Alarm | 97 | 0x61 | Screen Off Oil Alarm | |
+| 78 | 0x4E | Door Close Alarm | 98 | 0x62 | Charge MOS Fault | |
+| 79 | 0x4F | Emergency Brake Alarm | 99 | 0x63 | Discharge MOS Fault | |
+| 80 | 0x50 | Emergency Brake Alarm | 100 | 0x64 | Low Battery | |
 
-## Error Code Table [Old]
+### 2. Error Code Table
 
 | Error Code | Meaning | Error Code | Meaning | Error Code | Meaning |
 |---|---|---|---|---|---|
@@ -153,82 +90,90 @@ They represent Google Maps, Baidu Maps, Gaode Maps, and Tencent Maps respectivel
 | 3 | Device information error, verification failed | 18 | No permission | 32 | This account is not managed by law enforcement or management |
 | 4 | SIM card error | 19 | Authorized account exists | 33 | Timeout |
 | 5 | Device exists, please... | 20 | Password must be at least 6 characters long and contain numbers and letters | 34 | Insufficient balance |
-| 6 | Please activate the subordinate device, activate | 21 | Verification failed | 35 | QR code bound user |
+| 6 | Please activate the subordinate device, activate | 21 | Verification failed | 35 | QR code bound to user |
 | 7 | User does not exist | 22 | Verification code error | 36 | Send notification interval - one minute |
 | 8 | Non-registered user cannot unbind [itraker] | 23 | Phone number format not supported | 37 | Test device exceeds 200 |
 | 9 | Already bound by others | 24 | License plate number exists | 38 | QR code added on the same day |
-| 10 | Device not correct | 25 | QR code does not exist | 39 | Not directly subordinate user |
+| 10 | Device not correct | 25 | QR code does not exist | 39 | Not a direct subordinate user |
 | 11 | User does not exist | 26 | QR code exceeds 50000 | |
 | 12 | Device does not exist | 27 | QR code not bound | |
 | 13 | Superior unit does not exist | 28 | Account or password cannot be empty | |
 | 14 | Password mismatch | 29 | Account or password cannot be empty | |
-| 15 | IMEI number is registered or filled incorrectly, please check this IMEI or contact the service provider. | |
+| 15 | IMEI number is registered or filled incorrectly, please check this IMEI or contact the service provider. | | |
 
-## Mobile Terminal
+
+
+## Mobile Terminal Interfaces
 
 ### 1. Login
 
-Interface Name: url/GetDateServices.asmx/loginSystem
-Request Method: HTTP GET
-Request Example: http://apitest.18gps.net/GetDateServices.asmx/loginSystem?LoginName=fangbing&LoginPassword=123456&LoginType=ENTERPRISE&language=cn&ISMD5=0&timeZone=+08&apply=APP&loginUrl=http://vipapi.18gps.net/
+*   **Interface Name**: `loginSystem`
+*   **Request Method**: `HTTP GET`
+*   **Request Example**: `http://apitest.18gps.net/GetDateServices.asmx/loginSystem?LoginName=fangbing&LoginPassword=123456&LoginType=ENTERPRISE&language=en&ISMD5=0&timeZone=+08&apply=APP&loginUrl=http://vipapi.18gps.net/`
+
+**Request Parameters**
 
 | Parameter | Type | Required | Description |
-|---|---|---|---|
-| LoginName | String | Yes | Login Account |
-| LoginPassword | String | Yes | Login Password |
-| LoginType | String | Yes | Login Type [Unit User: ENTERPRISE / Device Login: USER] |
-| language | String | Yes | Language Type [cn, Chinese; en, English] |
-| timeZone | Int | Yes | Time Zone [Default 8] |
-| apply | String | Yes | Application Type [Default APP] |
-| ISMD5 | Int | No | MD5 Verification [Default 0 No verification] |
-| loginUrl | String | No | http://appzzl.18gps.net/ |
+| --- | --- | --- | --- |
+| `LoginName` | String | Yes | Login Account |
+| `LoginPassword` | String | Yes | Login Password |
+| `LoginType` | String | Yes | Login Type (ENTERPRISE: Unit User, USER: Device Login) |
+| `language` | String | Yes | Language (cn: Chinese, en: English) |
+| `timeZone` | Int | Yes | Time Zone (Default: 8) |
+| `apply` | String | Yes | Application Type (Default: APP) |
+| `ISMD5` | Int | No | MD5 Check (0: No, 1: Yes) |
+| `loginUrl` | String | No | Login URL |
 
-Development Notes
+**Development Notes**
 
-1.  [Note] This is the first interface you encounter in this document. All subsequent interfaces have similar structures. Please provide timely feedback to the project initiator if anything is unclear.
-2.  [Purpose] To obtain the token value, i.e., mds (mds can be understood as a symbol of the logged-in user's identity). If errorCode=403 is returned when using other interfaces, it means the mds has expired, and a new mds needs to be obtained by calling the login interface again.
-3.  [Request] Required fields must be provided, otherwise an error will be reported. Default values are also acceptable; if 'No' appears, it can be filled or left blank, depending on the specific situation.
-4.  [Response] The returned data is largely a standard JSON object string, but not absolutely. Please refer to the example, and the returned result shall prevail. The most common mistake is that people often mistakenly use the returned 'id' as the device 'id' to get the latest location. In fact, when the login type is "ENTERPRISE", the returned 'id' is the unit 'id'. If the login type is USER, it is the device 'id'. Please pay attention.
+This interface is used to obtain the `mds` (token). If other interfaces return `errorCode=403`, it means the `mds` has expired, and you need to call this interface again to get a new one.
 
-Request Result
+**Response**
 
-Success:
+*   **Success**
+
 ```json
 {
-"id": "5aa9e28a-80e3-4e29-b2b1-02774724d0", // ID of the logged-in user (determined by login type, here it is unit ID)
-"success": "true", // Whether login is successful
-"mds": "Token user identity", // Token
-"LoginType": "ENTERPRISE", // Login type: unit user login
-"grade": 4, // Account level
-"msg": "Login successful", // Error description
-"errorCode": 200 // Error code
-}
-```
-Failure:
-```json
-{
-"id": "00000000-0000-0000-0000-000000000000",
-"success": "false",
-"mds": null,
-"LoginType": "ENTERPRISE",
-"grade": -2000,
-"msg": "Username or password error",
-"errorCode": 404
+    "id": "5aa9e28a-80e3-4e29-b2b1-02774724d0",
+    "success": "true",
+    "mds": "user_identity_token",
+    "LoginType": "ENTERPRISE",
+    "grade": 4,
+    "msg": "Login successful",
+    "errorCode": 200
 }
 ```
 
-### 2. Account Registration (Deactivated, no longer in use, please use account 11 for new registration)
+*   **Failure**
 
-Interface Name: LXVehicleInfoRegister
-Request Method: HTTP GET
-Request Example: http://apitest.18gps.net//GetDateServices.asmx/GetDate?method=LXVehicleInfoRegister&username=15019466955&password=123456&parentId=d99bf6240faf4cdd9771469db0db98c8
+```json
+{
+    "id": "00000000-0000-0000-0000-000000000000",
+    "success": "false",
+    "mds": null,
+    "LoginType": "ENTERPRISE",
+    "grade": -2000,
+    "msg": "Username or password error",
+    "errorCode": 404
+}
+```
+
+
+
+### 2. Account Registration (Deactivated)
+
+*   **Interface Name**: `LXVehicleInfoRegister`
+*   **Request Method**: `HTTP GET`
+*   **Request Example**: `http://apitest.18gps.net//GetDateServices.asmx/GetDate?method=LXVehicleInfoRegister&username=15019466955&password=123456&parentId=d99bf6240faf4cdd9771469db0db98c8`
+
+**Request Parameters**
 
 | Parameter | Type | Required | Description |
-|---|---|---|---|
-| method | String | Yes | Interface Name |
-| username | String | Yes | Registration Account/Mobile Number |
-| password | String | Yes | Registration Password |
-| parentId | Guid | Yes | Parent Unit ID (Direct relationship) |
+| --- | --- | --- | --- |
+| `method` | String | Yes | Interface Name |
+| `username` | String | Yes | Registration Account/Mobile Number |
+| `password` | String | Yes | Registration Password |
+| `parentId` | Guid | Yes | Parent Unit ID |
 
 Development Notes
 
@@ -263,22 +208,24 @@ Failure:
 }
 ```
 
-### 3. Account Change Password
 
-Interface Name: modifyEnterprisePwd
-Request Method: HTTP GET
-Request Example: http://apitest.18gps.net//GetDateServices.asmx/GetDate?method=modifyEnterprisePwd&reg_pass=1234&reg_olbpass=123456&mds=c74c94d2c9da4ec49cdc3f2795b71dc1
+### 3. Change Account Password
+
+*   **Interface Name**: `modifyEnterprisePwd`
+*   **Request Method**: `HTTP GET`
+*   **Request Example**: `http://apitest.18gps.net//GetDateServices.asmx/GetDate?method=modifyEnterprisePwd&reg_pass=1234&reg_olbpass=123456&mds=c74c94d2c9da4ec49cdc3f2795b71dc1`
+
+**Request Parameters**
 
 | Parameter | Type | Required | Description |
-|---|---|---|---|
-| method | String | Yes | Interface Name |
-| mds | String | Yes | Token |
-| reg_pass | String | Yes | New Password |
-| reg_olbpass | String | Yes | Old Password |
-| ISMD5 | Int | No | 0 No verification / 1 Verification |
+| --- | --- | --- | --- |
+| `method` | String | Yes | Interface Name |
+| `mds` | String | Yes | Token |
+| `reg_pass` | String | Yes | New Password |
+| `reg_olbpass` | String | Yes | Old Password |
+| `ISMD5` | Int | No | 0: No check, 1: Check |
 
 Development Notes
-
 1.  Whether MD5 verification is enabled or not, the new password reg_pass must be in plain text.
 2.  MD5 verification must pass an uppercase value (the ciphertext after password encryption is required to be uppercase).
 
@@ -301,20 +248,23 @@ Failure:
 }
 ```
 
-### 4. Account (Bind/Add) Device
 
-Interface Name: ActiveAndAddDevice
-Request Method: HTTP GET
-Request Example: http://apitest.18gps.net//GetDateServices.asmx/GetDate?method=ActiveAndAddDevice&login_id=3dfca26777e549338a72e03e1c354d65&mds=e4495806ce1a4d42a7f6eba2f9d36ef0&FullName=H25685&Macid=011610300002
+### 4. Bind/Add Device to Account
+
+*   **Interface Name**: `ActiveAndAddDevice`
+*   **Request Method**: `HTTP GET`
+*   **Request Example**: `http://apitest.18gps.net//GetDateServices.asmx/GetDate?method=ActiveAndAddDevice&login_id=3dfca26777e549338a72e03e1c354d65&mds=e4495806ce1a4d42a7f6eba2f9d36ef0&FullName=H25685&Macid=011610300002`
+
+**Request Parameters**
 
 | Parameter | Type | Required | Description |
-|---|---|---|---|
-| method | String | Yes | Interface Name |
-| mds | String | Yes | Token |
-| login_id | Guid | Yes | Unit ID |
-| Macid | String | Yes | Device Number (IMEI) |
-| Platenumber | String | No | License Plate Number |
-| FullName | String | No | Device Name (Nickname) |
+| --- | --- | --- | --- |
+| `method` | String | Yes | Interface Name |
+| `mds` | String | Yes | Token |
+| `login_id` | Guid | Yes | Unit ID |
+| `Macid` | String | Yes | Device Number (IMEI) |
+| `Platenumber` | String | No | License Plate Number |
+| `FullName` | String | No | Device Name (Nickname) |
 
 Development Notes
 
@@ -341,18 +291,20 @@ Failure:
 }
 ```
 
-### 5. Account (Unbind/Clear) Device
+### 5. Unbind/Remove Device from Account
 
-Interface Name: unbundlingDevice
-Request Method: HTTP GET
-Request Example: http://apitest.18gps.net//GetDateServices.asmx/GetDate?method=unbundlingDevice&mds=e4495806ce1a4d42a7f6eba2f9d36ef0&macid=011610300002
+*   **Interface Name**: `unbundlingDevice`
+*   **Request Method**: `HTTP GET`
+*   **Request Example**: `http://apitest.18gps.net//GetDateServices.asmx/GetDate?method=unbundlingDevice&mds=e4495806ce1a4d42a7f6eba2f9d36ef0&macid=011610300002`
+
+**Request Parameters**
 
 | Parameter | Type | Required | Description |
-|---|---|---|---|
-| method | String | Yes | Interface Name |
-| mds | String | Yes | Token |
-| login_id | Guid | Yes | Unit ID |
-| macid | String | Yes | Device Number (IMEI) |
+| --- | --- | --- | --- |
+| `method` | String | Yes | Interface Name |
+| `mds` | String | Yes | Token |
+| `login_id` | Guid | Yes | Unit ID |
+| `macid` | String | Yes | Device Number (IMEI) |
 
 Development Notes
 
@@ -370,21 +322,22 @@ Success:
 }
 ```
 
+
 ### 6. Get Real-time Alarms
 
-Interface Name: queryLocalAlarmInfoUtc
-Request Method: HTTP GET
-Request Example: http://apitest.18gps.net//GetDateServices.asmx/GetDate?timestamp=1508228270718&method=queryLocalAlarmInfoUtc&callback=timeWarnOBJ.loadDataCallBack&school_id=754a5a28-8f24-47ff-908f-c363663db852&mds=72311ebde9e94e1292152436303362ff&max_time=1508103827687&type=custom
+*   **Interface Name**: `queryLocalAlarmInfoUtc`
+*   **Request Method**: `HTTP GET`
+*   **Request Example**: `http://apitest.18gps.net//GetDateServices.asmx/GetDate?timestamp=1508228270718&method=queryLocalAlarmInfoUtc&callback=timeWarnOBJ.loadDataCallBack&school_id=754a5a28-8f24-47ff-908f-c363663db852&mds=72311ebde9e94e1292152436303362ff&max_time=1508103827687&type=custom`
+
+**Request Parameters**
 
 | Parameter | Type | Required | Description |
-|---|---|---|---|
-| method | String | Yes | Interface Name |
-| mds | String | Yes | Token |
-| school_id | Guid | Yes | Unit ID/Device ID |
-| type | String | Yes | Fixed value "custom" |
-| max_time | Long | Yes | Last alarm time (Utc timestamp milliseconds, controls the acquisition range) |
-| timestamp | Long | No | Random number (used to refresh cache) |
-| callback | String | No | Callback method name |
+| --- | --- | --- | --- |
+| `method` | String | Yes | Interface Name |
+| `mds` | String | Yes | Token |
+| `school_id` | Guid | Yes | Unit ID |
+| `max_time` | Long | Yes | Max timestamp from the last query |
+| `type` | String | Yes | Query Type |
 
 Development Notes
 
@@ -426,114 +379,19 @@ timeWarnOBJ.loadDataCallBack(
 (Content truncated due to size limit. Use page ranges or line ranges to read remaining content)
 ```
 
+### 7. Get Device List
 
+*   **Interface Name**: `getDeviceList`
+*   **Request Method**: `HTTP GET`
+*   **Request Example**: `http://apitest.18gps.net//GetDateServices.asmx/GetDate?method=getDeviceList&mds=a1324221c41d44a08f93445b1bec63dd&mapType=BAIDU`
 
-## 7. Get Latest Position (Single Device)
-
-Interface Name: queryLocalAlarmInfoUtc
-Request Method: HTTP GET
-Request Example: http://apitest.18gps.net//GetDateServices.asmx/GetDate?method=GetLastPosition&mds=e4495806ce1a4d42a7f6eba2f9d36ef0&macid=011610300002&mapType=BAIDU
-
-| Parameter | Type | Required | Description |
-|---|---|---|---|
-| method | String | Yes | Interface Name |
-| mds | String | Yes | Token |
-| macid | String | Yes | Device Number (IMEI) |
-| mapType | String | Yes | Map Type |
-
-Development Notes
-
-This interface is used to get the latest position of a single device. The mapType parameter specifies the map service to use (e.g., BAIDU, GOOGLECN).
-
-Request Result
-
-Success:
-```json
-{
-"success": "true",
-"errorCode": "200",
-"errorDescribe": "",
-"data": [
-{
-"macid": "011610300002",
-"lat": 22.5890067,
-"lon": 113.853685,
-"gps_time": 1508203827687,
-"speed": "0",
-"course": 0,
-"status": 0,
-"address": "Shenzhen, Guangdong, China",
-"mapType": "BAIDU"
-}
-]
-}
-```
-
-## 8. Get Historical Track
-
-Interface Name: GetHistoryTrack
-Request Method: HTTP GET
-Request Example: http://apitest.18gps.net//GetDateServices.asmx/GetDate?method=GetHistoryTrack&mds=e4495806ce1a4d42a7f6eba2f9d36ef0&macid=011610300002&beginTime=1508103827687&endTime=1508203827687&mapType=BAIDU
+**Request Parameters**
 
 | Parameter | Type | Required | Description |
-|---|---|---|---|
-| method | String | Yes | Interface Name |
-| mds | String | Yes | Token |
-| macid | String | Yes | Device Number (IMEI) |
-| beginTime | Long | Yes | Start time (Utc timestamp milliseconds) |
-| endTime | Long | Yes | End time (Utc timestamp milliseconds) |
-| mapType | String | Yes | Map Type |
-
-Development Notes
-
-This interface is used to get the historical track of a single device within a specified time range.
-
-Request Result
-
-Success:
-```json
-{
-"success": "true",
-"errorCode": "200",
-"errorDescribe": "",
-"data": [
-{
-"macid": "011610300002",
-"lat": 22.5890067,
-"lon": 113.853685,
-"gps_time": 1508203827687,
-"speed": "0",
-"course": 0,
-"status": 0,
-"address": "Shenzhen, Guangdong, China",
-"mapType": "BAIDU"
-},
-{
-"macid": "011610300002",
-"lat": 22.5891000,
-"lon": 113.8537000,
-"gps_time": 1508203837687,
-"speed": "10",
-"course": 90,
-"status": 0,
-"address": "Shenzhen, Guangdong, China",
-"mapType": "BAIDU"
-}
-]
-}
-```
-
-## 9. Get Device List
-
-Interface Name: GetDeviceList
-Request Method: HTTP GET
-Request Example: http://apitest.18gps.net//GetDateServices.asmx/GetDate?method=GetDeviceList&mds=e4495806ce1a4d42a7f6eba2f9d36ef0&mapType=BAIDU
-
-| Parameter | Type | Required | Description |
-|---|---|---|---|
-| method | String | Yes | Interface Name |
-| mds | String | Yes | Token |
-| mapType | String | Yes | Map Type |
+| --- | --- | --- | --- |
+| `method` | String | Yes | Interface Name |
+| `mds` | String | Yes | Token |
+| `mapType` | String | Yes | Map Type |
 
 Development Notes
 
@@ -576,22 +434,110 @@ Success:
 }
 ```
 
-## 10. Modify Device Information
+### 8. Get Latest Position (Single Device)
 
-Interface Name: SetGpsUserFullNameAndPlateNumber
-Request Method: HTTP GET
-Request Example: url/DataService.ashx/GetDate?method=SetGpsUserFullNameAndPlateNumber&macid=DeviceNumber&fullName=DeviceName&plateNumber=LicensePlateNumber&mds=(obtained from login interface)
+*   **Interface Name**: `getDeviceListByMacid`
+*   **Request Method**: `HTTP GET`
+*   **Request Example**: `http://apitest.18gps.net//GetDateServices.asmx/GetDate?method=getDeviceListByMacid&mds=a1324221c41d44a08f93445b1bec63dd&macid=011610300002&mapType=BAIDU`
+
+**Request Parameters**
 
 | Parameter | Type | Required | Description |
-|---|---|---|---|
-| method | String | Yes | Interface Name |
-| mds | String | Yes | Token |
-| macid | String | Yes | Device Number (IMEI) |
-| fullName | String | Yes | Device Name |
-| plateNumber | String | Yes | License Plate Number |
-| LinkName | String | No | Contact Person |
-| LinkTel | String | No | Contact Number |
-| sim | String | No | Device SIM Card Number |
+| --- | --- | --- | --- |
+| `method` | String | Yes | Interface Name |
+| `mds` | String | Yes | Token |
+| `macid` | String | Yes | Device Number (IMEI) |
+| `mapType` | String | Yes | Map Type |
+
+
+Development Notes
+
+This interface is used to get the latest position of a single device. The mapType parameter specifies the map service to use (e.g., BAIDU, GOOGLECN).
+
+Request Result
+
+Success:
+```json
+{
+"success": "true",
+"errorCode": "200",
+"errorDescribe": "",
+"data": [
+{
+"macid": "011610300002",
+"lat": 22.5890067,
+"lon": 113.853685,
+"gps_time": 1508203827687,
+"speed": "0",
+"course": 0,
+"status": 0,
+"address": "Shenzhen, Guangdong, China",
+"mapType": "BAIDU"
+}
+]
+}
+```
+### 9. Get Historical Track
+
+*   **Interface Name**: `getHistory`
+*   **Request Method**: `HTTP GET`
+*   **Request Example**: `http://apitest.18gps.net//GetDateServices.asmx/GetDate?method=getHistory&mds=a1324221c41d44a08f93445b1bec63dd&macid=011610300002&mapType=BAIDU&beginTime=1508203827687&endTime=1508203837687`
+
+**Request Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `method` | String | Yes | Interface Name |
+| `mds` | String | Yes | Token |
+| `macid` | String | Yes | Device Number (IMEI) |
+| `mapType` | String | Yes | Map Type |
+| `beginTime` | Long | Yes | Start Time (UTC milliseconds) |
+| `endTime` | Long | Yes | End Time (UTC milliseconds) |
+Development Notes
+
+This interface is used to get the latest position of a single device. The mapType parameter specifies the map service to use (e.g., BAIDU, GOOGLECN).
+
+Request Result
+
+Success:
+```json
+{
+"success": "true",
+"errorCode": "200",
+"errorDescribe": "",
+"data": [
+{
+"macid": "011610300002",
+"lat": 22.5890067,
+"lon": 113.853685,
+"gps_time": 1508203827687,
+"speed": "0",
+"course": 0,
+"status": 0,
+"address": "Shenzhen, Guangdong, China",
+"mapType": "BAIDU"
+}
+]
+}
+```
+### 10. Modify Device Information
+
+*   **Interface Name**: `SetGpsUserFullNameAndPlateNumber`
+*   **Request Method**: `HTTP GET`
+*   **Request Example**: `url/DataService.ashx/GetDate?method=SetGpsUserFullNameAndPlateNumber&macid=DeviceNumber&fullName=DeviceName&plateNumber=LicensePlateNumber&mds=...`
+
+**Request Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `method` | String | Yes | Interface Name |
+| `mds` | String | Yes | Token |
+| `macid` | String | Yes | Device Number (IMEI) |
+| `fullName` | String | Yes | Device Name |
+| `plateNumber` | String | Yes | License Plate Number |
+| `LinkName` | String | No | Contact Person |
+| `LinkTel` | String | No | Contact Number |
+| `sim` | String | No | Device SIM Card Number |
 
 Development Notes
 
@@ -609,43 +555,44 @@ Success:
 }
 ```
 
-## 11. Account Registration (with device)
+### 11. Account Registration (with device)
 
-Interface Name: RegisterUser
-Request Method: HTTP GET
-Request Example: http://apitest.18gps.net//GetDateServices.asmx/GetDate?method=RegisterUser&macid=xy1610100063&loginName=17150310018&password=123456&repassword=123456
+*   **Interface Name**: `RegisterUser`
+*   **Request Method**: `HTTP GET`
+*   **Request Example**: `http://apitest.18gps.net//GetDateServices.asmx/GetDate?method=RegisterUser&macid=xy1610100063&loginName=17150310018&password=123456&repassword=123456`
+
+**Request Parameters**
 
 | Parameter | Type | Required | Description |
-|---|---|---|---|
-| method | String | Yes | Interface Name |
-| macid | String | Yes | Device Number (IMEI) |
-| loginName | String | Yes | Username |
-| password | String | Yes | Password |
-| repassword | String | Yes | Confirm Password |
+| --- | --- | --- | --- |
+| `method` | String | Yes | Interface Name |
+| `macid` | String | Yes | Device Number (IMEI) |
+| `loginName` | String | Yes | Username |
+| `password` | String | Yes | Password |
+| `repassword` | String | Yes | Confirm Password |
 
 Development Notes
-
 This interface can be used for registration in App or WeChat.
-
 Request Result
-
 General interface:
 
-## 12. Send Command
+### 12. Send Command
 
-Interface Name: SendCommands
-Request Method: HTTP GET
-Request Example: http://apitest.18gps.net//GetDateServices.asmx/GetDate?method=SendCommands&macid=00005581D8F3&cmd=GETVERSION&param=&pwd=&sendTime=&mds=6efb1fda32bb4416a7a29e54a1b045d1
+*   **Interface Name**: `SendCommands`
+*   **Request Method**: `HTTP GET`
+*   **Request Example**: `http://apitest.18gps.net//GetDateServices.asmx/GetDate?method=SendCommands&macid=00005581D8F3&cmd=GETVERSION&param=&pwd=&sendTime=&mds=6efb1fda32bb4416a7a29e54a1b045d1`
+
+**Request Parameters**
 
 | Parameter | Type | Required | Description |
-|---|---|---|---|
-| method | String | Yes | Interface Name |
-| macid | String | Yes | Device Number (IMEI) |
-| mds | String | Yes | Token |
-| cmd | String | Yes | Command Name |
-| param | String | No | Parameters to send, separated by English commas |
-| pwd | String | No | Device Password |
-| sendTime | DateTime | No | Set sending time |
+| --- | --- | --- | --- |
+| `method` | String | Yes | Interface Name |
+| `macid` | String | Yes | Device Number (IMEI) |
+| `mds` | String | Yes | Token |
+| `cmd` | String | Yes | Command Name |
+| `param` | String | No | Parameters to send, separated by commas |
+| `pwd` | String | No | Device Password |
+| `sendTime` | DateTime | No | Set sending time |
 
 Development Notes
 
@@ -688,18 +635,20 @@ Success:
 }
 ```
 
-## 13. Command Result Query
+### 13. Query Command Result
 
-Interface Name: GetCommandResults
-Request Method: HTTP GET
-Request Example: http://apitest.18gps.net//GetDateServices.asmx/GetDate?method=GetCommandResults&macid=00005581D8F3&cmdNo=e2b6b72c-27a3-4b86-9da0-477aa43a3518&mds=6efb1fda32bb4416a7a29e54a1b045d1
+*   **Interface Name**: `GetCommandResults`
+*   **Request Method**: `HTTP GET`
+*   **Request Example**: `http://apitest.18gps.net//GetDateServices.asmx/GetDate?method=GetCommandResults&macid=00005581D8F3&cmdNo=e2b6b72c-27a3-4b86-9da0-477aa43a3518&mds=6efb1fda32bb4416a7a29e54a1b045d1`
+
+**Request Parameters**
 
 | Parameter | Type | Required | Description |
-|---|---|---|---|
-| method | String | Yes | Interface Name |
-| macid | String | Yes | Device Number (IMEI) |
-| mds | String | Yes | Token |
-| cmdNo | String | Yes | Receipt Number |
+| --- | --- | --- | --- |
+| `method` | String | Yes | Interface Name |
+| `macid` | String | Yes | Device Number (IMEI) |
+| `mds` | String | Yes | Token |
+| `cmdNo` | String | Yes | Receipt Number |
 
 Development Notes
 
@@ -711,7 +660,6 @@ Success:
 ```json
 ------
 ```
-
 ## 13.1. Query All Command Results
 
 Interface Name: GetCommandResults
@@ -736,41 +684,42 @@ Success:
 ------
 ```
 
-## 14. Request Latitude and Longitude
+### 14. Request Address from Latitude and Longitude
 
-Interface Name: ---
-Request Method: HTTP GET
-Request Example: http://poi.18gps.net/POI?lat=22.36&lon=114.256&map=BAIDU
+*   **Interface Name**: `---`
+*   **Request Method**: `HTTP GET`
+*   **Request Example**: `http://poi.18gps.net/POI?lat=22.36&lon=114.256&map=BAIDU`
+
+**Request Parameters**
 
 | Parameter | Type | Required | Description |
-|---|---|---|---|
-| lat | Double | Yes | Latitude |
-| lon | Double | Yes | Longitude |
-| map | String | Yes | Map Type |
+| --- | --- | --- | --- |
+| `lat` | Double | Yes | Latitude |
+| `lon` | Double | Yes | Longitude |
+| `map` | String | Yes | Map Type |
 
 Development Notes
-
 Map types refer to the preface.
-
 Request Result
-
 Success:
 ```json
 26B2, 7th Lane, Ho Chung Village, Sai Kung District, Hong Kong SAR. 197 meters northwest of Liu Ren Yi Qi Shan Tan
 ```
 
-## 15. Batch Get Latest Position
+### 15. Batch Get Latest Position
 
-Interface Name: getDeviceListByCustomId
-Request Method: HTTP GET
-Request Example: http://apitest.18gps.net//GetDateServices.asmx/GetDate?method=getDeviceListByCustomId&mds=a1324221c41d44a08f93445b1bec63dd&id=e9c939f1-9c06-4312-b295-47f0162b4176&mapType=BAIDU
+*   **Interface Name**: `getDeviceListByCustomId`
+*   **Request Method**: `HTTP GET`
+*   **Request Example**: `http://apitest.18gps.net//GetDateServices.asmx/GetDate?method=getDeviceListByCustomId&mds=a1324221c41d44a08f93445b1bec63dd&id=e9c939f1-9c06-4312-b295-47f0162b4176&mapType=BAIDU`
+
+**Request Parameters**
 
 | Parameter | Type | Required | Description |
-|---|---|---|---|
-| method | String | Yes | Interface Name |
-| mds | String | Yes | Token |
-| id | Guid | Yes | Unit ID |
-| mapType | String | Yes | Map Type |
+| --- | --- | --- | --- |
+| `method` | String | Yes | Interface Name |
+| `mds` | String | Yes | Token |
+| `id` | Guid | Yes | Unit ID |
+| `mapType` | String | Yes | Map Type |
 
 Development Notes
 
@@ -817,18 +766,20 @@ Success:
 [1444202949000,"Tianyi Card",114.046648,22.652224,114.046648,22.652224,1444202951657,1444202951657,"5","00000100",319.0,"383715011929452","1fe02b6045a4477aae90e66a7c22(Content truncated due to size limit. Use page ranges or line ranges to read remaining content)"
 ```
 
-## 16. Get Subordinate Unit Device List
+### 16. Get Subordinate Unit Device List
 
-Interface Name: getDeviceListByCustomId
-Request Method: HTTP GET
-Request Example: http://apitest.18gps.net//GetDateServices.asmx/GetDate?method=GetDeviceListByCustomId&mds=930942815323449093b3923d170cd40&id=334f2e92-787d-45e8-bf5c-3b500a8c787d
+*   **Interface Name**: `GetDeviceListByCustomId`
+*   **Request Method**: `HTTP GET`
+*   **Request Example**: `http://apitest.18gps.net//GetDateServices.asmx/GetDate?method=GetDeviceListByCustomId&mds=930942815323449093b3923d170cd40&id=334f2e92-787d-45e8-bf5c-3b500a8c787d`
+
+**Request Parameters**
 
 | Parameter | Type | Required | Description |
-|---|---|---|---|
-| method | String | Yes | Interface Name |
-| mds | String | Yes | Token |
-| id | Guid | Yes | Unit ID |
-| mapType | String | Yes | Map Type |
+| --- | --- | --- | --- |
+| `method` | String | Yes | Interface Name |
+| `mds` | String | Yes | Token |
+| `id` | Guid | Yes | Unit ID |
+| `mapType` | String | Yes | Map Type |
 
 Development Notes
 
@@ -885,23 +836,25 @@ Success:
 }
 ```
 
-## 17. Bind Device Interface [Reserved]
 
-Interface Name: MoveDevice
-Request Method: HTTP GET
-Request Example: http://apitest.18gps.net//GetDateServices.asmx/GetDate?method=MoveDevice&mds=930942815323449093b3923d170cd40&id=334f2e92-787d-45e8-bf5c-3b500a8c787d&macid=027028656666
+### 17. Bind Device Interface [Reserved]
+
+*   **Interface Name**: `MoveDevice`
+*   **Request Method**: `HTTP GET`
+*   **Request Example**: `http://apitest.18gps.net//GetDateServices.asmx/GetDate?method=MoveDevice&mds=930942815323449093b3923d170cd40&id=334f2e92-787d-45e8-bf5c-3b500a8c787d&macid=027028656666`
+
+**Request Parameters**
 
 | Parameter | Type | Required | Description |
-|---|---|---|---|
-| method | String | Yes | Interface Name |
-| mds | String | Yes | Token |
-| id | Guid | Yes | Unit ID (Self-written) |
-| macid | String | Yes | Device Number |
+| --- | --- | --- | --- |
+| `method` | String | Yes | Interface Name |
+| `mds` | String | Yes | Token |
+| `id` | Guid | Yes | Unit ID |
+| `macid` | String | Yes | Device Number |
 
-Development Notes
+**Development Notes**
 
 If you have a registered account, you need to add another device to your account.
-
 Request Result
 
 Success:
@@ -909,25 +862,24 @@ Success:
 ------
 ```
 
-## 18. Set Alarm Filter [Common for Device Registration and Account Login]
+### 18. Set Alarm Filter
 
-Interface Name: setFilterAlarmInfo
-Request Method: HTTP GET
-Request Example: http://apitest.18gps.net//GetDateServices.asmx/GetDate?method=setFilterAlarmInfo&custid=754a5a28-8f24-47ff-908f-c363663db702&mds=314dc945b0ea498b81b6de21f47f178e&alarmType=0,3,7
+*   **Interface Name**: `setFilterAlarmInfo`
+*   **Request Method**: `HTTP GET`
+*   **Request Example**: `http://apitest.18gps.net//GetDateServices.asmx/GetDate?method=setFilterAlarmInfo&custid=754a5a28-8f24-47ff-908f-c363663db702&mds=314dc945b0ea498b81b6de21f47f178e&alarmType=0,3,7`
+
+**Request Parameters**
 
 | Parameter | Type | Required | Description |
-|---|---|---|---|
-| method | String | Yes | Interface Name |
-| mds | String | Yes | Token |
-| custid | Guid | Yes | Unit ID (Login ID) |
-| alarmType | String | Yes | Filtered alarm types, separated by commas |
+| --- | --- | --- | --- |
+| `method` | String | Yes | Interface Name |
+| `mds` | String | Yes | Token |
+| `custid` | Guid | Yes | Unit ID |
+| `alarmType` | String | Yes | Filtered alarm types, separated by commas |
 
 Development Notes
-
 By default, items that need to be alarmed are selected. If you don't want to alarm certain types, you need to uncheck them.
-
 Request Result
-
 Success:
 ```json
 {
@@ -937,18 +889,19 @@ Success:
 }
 ```
 
-## 19. Get Filtered Alarm Number
+### 19. Get Filtered Alarm Numbers
 
-Interface Name: GetPushAlarmSwitch
-Request Method: HTTP GET
-Request Example: http://apitest.18gps.net//GetDataService.aspx?method=GetPushAlarmSwitch&mds=314dc945b0ea498b81b6de21f47f178e
+*   **Interface Name**: `GetPushAlarmSwitch`
+*   **Request Method**: `HTTP GET`
+*   **Request Example**: `http://apitest.18gps.net//GetDataService.aspx?method=GetPushAlarmSwitch&mds=314dc945b0ea498b81b6de21f47f178e`
+
+**Request Parameters**
 
 | Parameter | Type | Required | Description |
-|---|---|---|---|
-| method | String | Yes | Interface Name |
-| mds | String | Yes | Token |
-
-Development Notes
+| --- | --- | --- | --- |
+| `method` | String | Yes | Interface Name |
+| `mds` | String | Yes | Token |
+evelopment Notes
 
 Query the filtered alarm type numbers.
 
@@ -969,23 +922,23 @@ Success:
 ]
 }
 ```
+### 20. Get Alarm Details
 
-## 20. Get Alarm Details
+*   **Interface Name**: `alarmOperation`
+*   **Request Method**: `HTTP GET`
+*   **Request Example**: `http://apitest.18gps.net//GetDataService.aspx?method=alarmOperation&mds=314dc945b0ea498b81b6de21f47f178e&alarmType=1,2,3,4,6,7,8,9,10,11,14,38&enterprise_id=e0329898-4eaa-4612-9f69-00986998d89b&userid=72b92fe0-34ca-483b-b0f9-27e4c7ee3d92&beginTime=1587916800000&endTime=1587951883000`
 
-Interface Name: alarmOperation
-Request Method: HTTP GET
-Request Example: http://apitest.18gps.net//GetDataService.aspx?method=alarmOperation&mds=314dc945b0ea498b81b6de21f47f178e&alarmType=1,2,3,4,6,7,8,9,10,11,14,38&enterprise_id=e0329898-4eaa-4612-9f69-00986998d89b&userid=72b92fe0-34ca-483b-b0f9-27e4c7ee3d92&beginTime=1587916800000&endTime=1587951883000
+**Request Parameters**
 
 | Parameter | Type | Required | Description |
-|---|---|---|---|
-| method | String | Yes | Interface Name |
-| mds | String | Yes | Token |
-| alarmType | String | Yes | Alarm Type |
-| enterprise_id | Guid | Yes | Unit ID (Login ID) |
-| userid | Guid | Yes | Device ID |
-| beginTime | Long | Yes | Utc timestamp milliseconds (start time) |
-| endTime | Long | Yes | Utc timestamp milliseconds (end time) |
-
+| --- | --- | --- | --- |
+| `method` | String | Yes | Interface Name |
+| `mds` | String | Yes | Token |
+| `alarmType` | String | Yes | Alarm Type |
+| `enterprise_id` | Guid | Yes | Unit ID |
+| `userid` | Guid | Yes | Device ID |
+| `beginTime` | Long | Yes | Start Time (UTC milliseconds) |
+| `endTime` | Long | Yes | End Time (UTC milliseconds) |
 Development Notes
 
 See the 6th interface for return result notes.
@@ -1005,19 +958,20 @@ ptime: "2020/04/27 08:31:44",
 }
 ```
 
-## 21. Device Change Password
+### 21. Change Device Password
 
-Interface Name: modifyUserPwd
-Request Method: HTTP GET
-Request Example: (Not provided in OCR content)
+*   **Interface Name**: `modifyUserPwd`
+*   **Request Method**: `HTTP GET`
+
+**Request Parameters**
 
 | Parameter | Type | Required | Description |
-|---|---|---|---|
-| method | String | Yes | Interface Name |
-| mds | String | Yes | Token |
-| macid | String | Yes | Device Number |
-| pwd | Guid | Yes | New Password |
-| oldPwd | Guid | Yes | Old Password |
+| --- | --- | --- | --- |
+| `method` | String | Yes | Interface Name |
+| `mds` | String | Yes | Token |
+| `macid` | String | Yes | Device Number |
+| `pwd` | Guid | Yes | New Password |
+| `oldPwd` | Guid | Yes | Old Password |
 
 Development Notes
 
@@ -1035,18 +989,20 @@ Success:
 }
 ```
 
-## 22. Send Command History Record
+### 22. Get Sent Command History
 
-Interface Name: GetSendCmdList
-Request Method: HTTP GET
-Request Example: http://api.18gps.net//GetDataService.aspx?method=GetSendCmdList&mds=a544e41669d6455f84b862f666eaffdd&macid=027045307931&count=&_t=1614219663391
+*   **Interface Name**: `GetSendCmdList`
+*   **Request Method**: `HTTP GET`
+*   **Request Example**: `http://api.18gps.net//GetDataService.aspx?method=GetSendCmdList&mds=a544e41669d6455f84b862f666eaffdd&macid=027045307931&count=&_t=1614219663391`
+
+**Request Parameters**
 
 | Parameter | Type | Required | Description |
-|---|---|---|---|
-| method | String | Yes | Interface Name |
-| mds | String | Yes | Token |
-| macid | String | Yes | Device Number |
-| count | int | No | Number of entries |
+| --- | --- | --- | --- |
+| `method` | String | Yes | Interface Name |
+| `mds` | String | Yes | Token |
+| `macid` | String | Yes | Device Number |
+| `count` | int | No | Number of records |
 
 Development Notes
 
@@ -1105,41 +1061,49 @@ Success:
 }
 ```
 
-## Status and Statenumber Descriptions
 
-**Status (description):** composed of eight consecutive characters
+## Appendix: Field Descriptions
 
-*   **First digit:** acc status (accState 1 on 0 off)
-*   **Second digit:** device self-defense status (ProtectState 1 armed 0 disarmed)
-*   **Third digit:** oil/electric (oilState 1 on 0 off)
-*   **Fourth digit:** charging status ()
-*   **Fifth digit:** door status (1 open 0 closed)
-*   **Sixth digit:** positioning status (1 positioned 0 unpositioned) [meaningless]
-*   **Seventh digit:** main power status (ElecState)
-*   **Eighth digit:** platform arming status (defend) [meaningless]
-*   **Ninth digit:** platform stealth status (gpsOnOff) (1 for stealth)
+### `status` Field Description
 
-**Statenumber (description):** composed of sixteen consecutive comma-separated characters
+The `status` field consists of 8 consecutive characters, each representing a different state:
 
-*   **First digit:** mileage (mil)
-*   **Second digit:** oil volume (oil)
-*   **Third digit:** weight (weight)
-*   **Fourth digit:** temperature 1 (tempc)
-*   **Fifth digit:** backup battery power (betteryV), there are two ways to represent power: 1 is percentage, 2 is V (volt)
-    *   When power is greater than 100, -100 to remove V unit, less than 100 as percentage
-*   **Sixth digit:** main power voltage (powerV), unit: V
-*   **Seventh digit:** GPS count (gpscount)
-*   **Eighth digit:** gsm signal strength (gsmlevel)
-*   **Ninth digit:** forward/reverse (ClockwiseState)
-*   **Tenth digit:** vehicle status (VehicleState)
-*   **Eleventh digit:** lock count (lockcnt)
-*   **Twelfth digit:** temperature 2 (temp1)
-*   **Thirteenth digit:** temperature 3 (temp2)
-*   **Fourteenth digit:** temperature 4 (temp3)
-*   **Fifteenth digit:** height (height)
-*   **Sixteenth digit:** positioning signal type (SignalType) 0: Beidou GPS 1: Wifi positioning 16: Base station positioning
-*   **Seventeenth digit:** step number (StepNumber)
-*   **Eighteenth digit:** VIN
+| Position | Meaning | Description |
+|---|---|---|
+| 1 | ACC Status | `1` for ON, `0` for OFF |
+| 2 | Device Self-Defense Status | `1` for ARMED, `0` for DISARMED |
+| 3 | Oil/Electric Status | `1` for ON, `0` for OFF |
+| 4 | Charging Status | - |
+| 5 | Door Status | `1` for OPEN, `0` for CLOSED |
+| 6 | Positioning Status | `1` for POSITIONED, `0` for UNPOSITIONED (Meaningless) |
+| 7 | Main Power Status | - |
+| 8 | Platform Arming Status | (Meaningless) |
+| 9 | Platform Stealth Status | `1` for STEALTH |
+
+### `statenumber` Field Description
+
+The `statenumber` field consists of 18 comma-separated values, each representing a different data point:
+
+| Position | Meaning | Unit/Description |
+|---|---|---|
+| 1 | Mileage | `mil` |
+| 2 | Oil Volume | `oil` |
+| 3 | Weight | `weight` |
+| 4 | Temperature 1 | `tempc` |
+| 5 | Backup Battery Power | `betteryV` (Percentage or Volts) |
+| 6 | Main Power Voltage | `powerV` (Volts) |
+| 7 | GPS Count | `gpscount` |
+| 8 | GSM Signal Strength | `gsmlevel` |
+| 9 | Forward/Reverse | `ClockwiseState` |
+| 10 | Vehicle Status | `VehicleState` |
+| 11 | Lock Count | `lockcnt` |
+| 12 | Temperature 2 | `temp1` |
+| 13 | Temperature 3 | `temp2` |
+| 14 | Temperature 4 | `temp3` |
+| 15 | Altitude | `height` |
+| 16 | Positioning Signal Type | `SignalType` (0: Beidou GPS, 1: Wifi, 16: Base Station) |
+| 17 | Step Number | `StepNumber` |
+| 18 | VIN | - |
 
 ## Development Supplement:
 
@@ -1248,107 +1212,6 @@ Success:
 ]
 }
 ```
-
-## Status and Statenumber Descriptions
-
-**Status (description):** composed of eight consecutive characters
-
-*   **First digit:** acc status (accState 1 on 0 off)
-*   **Second digit:** device self-defense status (ProtectState 1 armed 0 disarmed)
-*   **Third digit:** oil/electric (oilState 1 on 0 off)
-*   **Fourth digit:** charging status ()
-*   **Fifth digit:** door status (1 open 0 closed)
-*   **Sixth digit:** positioning status (1 positioned 0 unpositioned) [meaningless]
-*   **Seventh digit:** main power status (ElecState)
-*   **Eighth digit:** platform arming status (defend) [meaningless]
-*   **Ninth digit:** platform stealth status (gpsOnOff) (1 for stealth)
-
-**Statenumber (description):** composed of sixteen consecutive comma-separated characters
-
-*   **First digit:** mileage (mil)
-*   **Second digit:** oil volume (oil)
-*   **Third digit:** weight (weight)
-*   **Fourth digit:** temperature 1 (tempc)
-*   **Fifth digit:** backup battery power (betteryV), there are two ways to represent power: 1 is percentage, 2 is V (volt)
-    *   When power is greater than 100, -100 to remove V unit, less than 100 as percentage
-*   **Sixth digit:** main power voltage (powerV), unit: V
-*   **Seventh digit:** GPS count (gpscount)
-*   **Eighth digit:** gsm signal strength (gsmlevel)
-*   **Ninth digit:** forward/reverse (ClockwiseState)
-*   **Tenth digit:** vehicle status (VehicleState)
-*   **Eleventh digit:** lock count (lockcnt)
-*   **Twelfth digit:** temperature 2 (temp1)
-*   **Thirteenth digit:** temperature 3 (temp2)
-*   **Fourteenth digit:** temperature 4 (temp3)
-*   **Fifteenth digit:** height (height)
-*   **Sixteenth digit:** positioning signal type (SignalType) 0: Beidou GPS 1: Wifi positioning 16: Base station positioning
-*   **Seventeenth digit:** step number (StepNumber)
-*   **Eighteenth digit:** VIN
-
-## Development Supplement:
-
-```json
-{
-"key": {
-"sys_time":0,
-"user_name":1,
-"jingdu":2,
-"weidu":3,
-"ljingdu":4,
-"lweidu":5,
-"datetime":6,
-"heart_time":7,
-"su":8,
-"status":9,
-"hangxiang":10,
-"sim_id":11,
-"user_id":12,
-"sale_type":13,
-"iconType":14,
-"server_time":15,
-"product_type":16,
-"expire_date":17,
-"group_id":18,
-"statenumber":19,
-"electric":20,
-"describe":21,
-"sim":22,
-"precision":23,
-"isFollow":24
-},
-"records": [
-[
-1557712988,
-"59号",
-121.527837,
-31.100259,
-121.527837,
-31.100259,
-1557712988000,
-1557713134721,
-"0",
-"10000010",
-124.0,
-"8629640236329",
-"fdd70e9ebc6c4559aca661e49e",
-0,
-"22",
-1557713139056,
-"GS05B",
-2204150400000,
-"0",
-"4.59,0,0,,6,0,12,4,0,0,0,0,0,0,0,0,",
-6.0,
-"ICCID:89860412101",
-"",
-10, // When the value is 10, it means GPS positioning, no (base station/wifi) accuracy
-"0" // Whether to follow [no use]
-]
-],
-"groups": []
-}
-```
-
 **Note a logic:** first judge whether it has expired, then judge whether it is positioned, then judge which positioning method it is, and finally organize the corresponding display effect.
 
 
@@ -4435,32 +4298,35 @@ Interface Description:
 Request Result:
 ```json
 {
-    "totalfuelUsed": "0.3", // Total fuel consumption
-    "distance": "3.0", // Distance (km)
-    // ... (truncated content)
-    "fuelHKM": "11.7", // Fuel consumption per hundred kilometers
-    "totalSpeedoverSeconds": null, // Overspeed driving time
-    "maxspeed": "50", // Maximum speed
-    "brakeTimes": 0, // Stop time (unit: seconds)
-    "emergencyBrakeTimes": 1, // Emergency deceleration times
-    "speedupTimes": 0, // Rapid acceleration time (unit: seconds)
-    "emergencySpeedupTimes": 0, // Rapid acceleration times
-    "speed": "14", // Average speed
-    "maxTempc": 68, // Maximum water temperature
-    "maxEngRPM": 1500, // Maximum engine speed
-    "powerv": 14.2, // Voltage
-    "overtimeDriverMinutes": 1500, // Fatigued driving (seconds)
-    "btime": "10:49:25", // Start time
-    "etime": "11:02:23", // End time
-    "strokeTime": "2018/2/28", // Date
-    "jsType": 0, // 0: Vanguard 1: Standard 2: Steady 3: Slowpoke
-    "driveTime": 745.0, // Total driving seconds
-    "fraction": 0.0,
-    "random": null,
-    "coulometric": 0
-},
+"totalfuelUsed": "0.3", // Total fuel consumption
+"distance": "3.0", // Distance (km)
+// ... (truncated content)
+}
 ```
 
+
+
+"fuelHKM": "11.7", // Fuel consumption per hundred kilometers
+"totalSpeedoverSeconds": null, // Overspeed driving time
+"maxspeed": "50", // Maximum speed
+"brakeTimes": 0, // Stop time (unit: seconds)
+"emergencyBrakeTimes": 1, // Emergency deceleration times
+"speedupTimes": 0, // Rapid acceleration time (unit: seconds)
+"emergencySpeedupTimes": 0, // Rapid acceleration times
+"speed": "14", // Average speed
+"maxTempc": 68, // Maximum water temperature
+"maxEngRPM": 1500, // Maximum engine speed
+"powerv": 14.2, // Voltage
+"overtimeDriverMinutes": 1500, // Fatigued driving (seconds)
+"btime": "10:49:25", // Start time
+"etime": "11:02:23", // End time
+"strokeTime": "2018/2/28", // Date
+"jsType": 0, // 0: Vanguard 1: Standard 2: Steady 3: Slowpoke
+"driveTime": 745.0, // Total driving seconds
+"fraction": 0.0,
+"random": null,
+"coulometric": 0
+},
 Success:
 ```json
 {}
@@ -4472,5 +4338,3 @@ Failure:
 ```json
 {}
 ```
-
-
