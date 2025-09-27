@@ -86,6 +86,7 @@ The GPS tracker is suggested to be installed in a hidden place, and it is recomm
 - **Yellow line (cut off fuel and power)** connects to the 86 port of the oil pump relay and connects to the 85 port of the 12V relay.
 - **White line (anode)** connects to the 87a port of the oil pump relay.
 - **Oil pump** connects to the 30 port of the oil pump relay.
+<img width="663" height="612" alt="Screen Shot 2025-09-27 at 12 14 09 PM" src="https://github.com/user-attachments/assets/3d7faaa1-0618-44ef-921c-7a45d282a804" />
 
 ## 5. Wiring precautions
 
