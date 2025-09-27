@@ -1,4 +1,4 @@
-# GPS Positioning Service Open API Documentation
+# GPS Positioning Service Open API
 ## Foreword
 
 ### Preface【Please be sure to read the entire preface carefully before you begin】
